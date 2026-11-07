@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>财经提词卡</title>
+<meta name="description" content="四个财经热点，可编辑、自动滚动、离线可用的极简提词卡。">
+<style>
+:root{
+  --bg:#f5f5f7;
+  --card:#ffffff;
+  --text:#1d1d1f;
+  --sub:#6e6e73;
+  --faint:#aeaeb2;
+  --line:#e5e5ea;
+  --accent:#0071e3;
+  --accent-soft:#eaf3ff;
+  --size:18px;
+  --radius:16px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;overflow-x:hidden}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  height:100dvh;
+  display:flex;
+  flex-direction:column;
+}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none;padding:0}
+button,a{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---- top bar ---- */
+.topbar{
+  flex:none;
+  position:sticky;top:0;z-index:20;
+  background:rgba(245,245,247,.82);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+  backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:1px solid var(--line);
+}
+.topbar-inner{
+  max-width:680px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 20px;
+  padding-top:calc(12px + env(safe-area-inset-top));
+}
+.brand{font-size:17px;font-weight:600;letter-spacing:.01em}
+.brand small{display:block;font-size:12px;color:var(--sub);font-weight:400;margin-top:2px}
+.topbar-actions{display:flex;gap:8px;align-items:center}
+.icon-btn{
+  width:38px;height:38px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--card);border:1px solid var(--line);
+  font-size:16px;line-height:1;color:var(--text);
+  box-shadow:0 1px 2px rgba(0,0,0,.04);
+}
+.icon-btn:active{transform:scale(.96)}
+.icon-btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+#menuBtn{font-weight:600;letter-spacing:.5px}
+
+/* ---- progress ---- */
+.progress{height:2px;background:var(--line);overflow:hidden}
+.progress div{height:100%;width:0;background:var(--accent);transition:width .1s linear}
+
+/* ---- stage (scroll area) ---- */
+.stage{
+  flex:1;min-height:0;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-y:contain;
+  padding:18px 16px calc(24px + env(safe-area-inset-bottom));
+}
+.card{
+  max-width:680px;margin:0 auto;
+  background:var(--card);
+  border-radius:var(--radius);
+  border:1px solid var(--line);
+  box-shadow:0 1px 3px rgba(0,0,0,.03),0 8px 28px rgba(0,0,0,.04);
+  padding:26px 22px 22px;
+}
+.card.animate{animation:cardIn .28s ease}
+@keyframes cardIn{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:none}}
+
+.card-head .count{font-size:12px;color:var(--sub);letter-spacing:.04em;margin-bottom:8px}
+.card-head h1{
+  margin:0 0 6px;font-weight:600;
+  font-size:clamp(22px,6vw,24px);
+  line-height:1.35;letter-spacing:.005em;
+}
+.card-head .meta-line{font-size:12px;color:var(--faint);margin-bottom:6px}
+
+.part{padding:16px 0;border-top:1px solid var(--line)}
+.part:first-of-type{border-top:none}
+.part-label{
+  font-size:16px;color:var(--text);font-weight:600;
+  letter-spacing:.03em;margin-bottom:10px;
+  display:flex;align-items:center;gap:8px;
+}
+.part-label::before{content:"";width:3px;height:12px;border-radius:2px;background:var(--accent)}
+.part-body{
+  margin:0;font-size:var(--size);line-height:1.8;
+  letter-spacing:.015em;overflow-wrap:anywhere;white-space:pre-wrap;
+}
+.part-body strong{font-weight:650;color:var(--text);font-variant-numeric:tabular-nums}
+.part-body .ref{
+  color:var(--accent);text-decoration:none;
+  font-size:.68em;vertical-align:super;line-height:0;
+  margin-left:2px;font-weight:500;white-space:nowrap;
+}
+.card-foot{
+  margin-top:16px;padding-top:14px;border-top:1px solid var(--line);
+  display:flex;flex-direction:column;gap:10px;
+}
+.source-line{font-size:12.5px;color:var(--sub);line-height:1.7}
+.link-btn{
+  align-self:flex-start;color:var(--accent);font-size:14px;font-weight:500;
+  padding:7px 0;
+}
+.link-btn:active{opacity:.6}
+
+/* ---- bottom nav ---- */
+.navbar{
+  flex:none;z-index:20;
+  background:rgba(255,255,255,.9);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+  backdrop-filter:saturate(180%) blur(20px);
+  border-top:1px solid var(--line);
+  padding:10px 16px;
+  padding-bottom:calc(10px + env(safe-area-inset-bottom));
+}
+.navbar-inner{
+  max-width:680px;margin:0 auto;
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;
+}
+.nav-btn{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:15px;color:var(--text);font-weight:500;
+  padding:10px 6px;border-radius:10px;
+}
+.nav-btn:disabled{color:var(--faint)}
+.nav-btn:active:not(:disabled){background:var(--accent-soft)}
+.nav-btn .arrow{font-size:16px;line-height:1}
+#next{justify-content:flex-end}
+.nav-pos{font-size:14px;color:var(--sub);font-variant-numeric:tabular-nums;font-weight:500;white-space:nowrap}
+
+/* ---- dialogs ---- */
+dialog{
+  color:var(--text);background:var(--card);
+  border:none;border-radius:var(--radius);padding:0;
+  max-width:520px;width:calc(100% - 32px);
+  max-height:86dvh;
+  box-shadow:0 24px 80px rgba(0,0,0,.18);
+}
+dialog::backdrop{background:rgba(0,0,0,.32);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.dlg-head{
+  padding:18px 20px 14px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--line);
+}
+.dlg-head h2{font-size:17px;font-weight:600;margin:0}
+.dlg-head button{width:32px;height:32px;border-radius:50%;background:var(--bg);color:var(--sub);font-size:18px;line-height:1}
+.dlg-body{padding:18px 20px;overflow-y:auto;max-height:calc(86dvh - 62px)}
+.dlg-body form{display:flex;flex-direction:column}
+
+/* menu sheet (centered modal on desktop, bottom sheet on mobile) */
+@media (max-width:640px){
+  #menuDialog:modal{
+    margin:auto 0 0;max-width:none;width:100%;
+    max-height:82dvh;border-radius:18px 18px 0 0;
+  }
+  #menuDialog .dlg-body{max-height:calc(82dvh - 62px)}
+}
+.menu-row{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:14px 0;border-bottom:1px solid var(--line);
+}
+.menu-row:last-child{border-bottom:none}
+.menu-row .row-label{font-size:15px;color:var(--text);font-weight:500}
+.menu-row .row-sub{font-size:12px;color:var(--sub);margin-top:2px}
+.menu-row .row-ctrl{flex:none}
+.menu-row input[type=range]{width:150px;accent-color:var(--accent)}
+.menu-row output{font-size:13px;color:var(--sub);font-variant-numeric:tabular-nums;min-width:42px;text-align:right}
+.menu-action{
+  width:100%;text-align:left;font-size:16px;color:var(--accent);font-weight:500;
+  padding:14px 0;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.menu-action:last-of-type{border-bottom:none}
+.menu-action:active{opacity:.6}
+.menu-action .chev{color:var(--faint);font-size:15px}
+.menu-done{
+  margin-top:6px;width:100%;text-align:center;font-size:16px;font-weight:600;color:var(--text);
+  background:var(--bg);border-radius:12px;padding:14px;
+}
+
+/* edit dialog */
+.edit-field{display:block;margin-bottom:16px}
+.edit-field span{display:block;color:var(--sub);font-size:12.5px;margin-bottom:7px;font-weight:500}
+.edit-field input,.edit-field textarea{
+  width:100%;resize:vertical;border:1px solid var(--line);border-radius:10px;
+  background:var(--bg);color:var(--text);padding:12px 13px;
+  font-size:15px;line-height:1.65;
+}
+.edit-field textarea{min-height:92px}
+.dlg-foot{
+  padding:14px 20px;border-top:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.dlg-foot small{font-size:11.5px;color:var(--sub)}
+.btn{
+  background:var(--accent);color:#fff;font-weight:600;
+  padding:10px 18px;border-radius:12px;font-size:15px;
+}
+.btn:active{opacity:.85}
+.btn.ghost{background:transparent;color:var(--accent)}
+
+/* source dialog */
+.source-intro{font-size:13px;color:var(--sub);line-height:1.8;margin:0 0 4px}
+.source-item{padding:15px 0;border-bottom:1px solid var(--line)}
+.source-item:last-child{border-bottom:none}
+.source-item small{display:block;font-size:12px;color:var(--sub);margin-bottom:6px}
+.source-item a{color:var(--accent);line-height:1.7;font-size:15px;text-decoration:none;word-break:break-all}
+.source-item.target{background:var(--accent-soft);border-radius:10px;padding:14px 12px;margin:0 -4px}
+.source-note{font-size:12px;line-height:1.9;color:var(--sub);margin:18px 0 0}
+
+/* toast */
+.toast{
+  position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom));
+  transform:translateX(-50%);
+  background:rgba(29,29,31,.92);color:#fff;border-radius:12px;
+  padding:11px 18px;font-size:13.5px;z-index:60;max-width:86vw;text-align:center;
+  box-shadow:0 8px 30px rgba(0,0,0,.18);
+  transition:opacity .2s ease,transform .2s ease;
+}
+.toast[hidden]{display:none}
+
+@media (min-width:641px){
+  .stage{padding-top:28px}
+  .card{padding:32px 36px 28px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">财经提词卡<small>11月8日备播 · 信息截至11月7日晚</small></div>
+    <div class="topbar-actions">
+      <button id="play" class="icon-btn" aria-pressed="false" aria-label="开始或暂停自动滚动">▶</button>
+      <button id="menuBtn" class="icon-btn" aria-label="打开设置菜单">•••</button>
+    </div>
+  </div>
+  <div class="progress" aria-hidden="true"><div id="progress"></div></div>
+</header>
+
+<main class="stage" id="stage" aria-label="提词内容">
+  <div class="card" id="card">
+    <div class="card-head">
+      <div class="count" id="count">话题 01 · 共 4 题</div>
+      <h1 id="heading"></h1>
+    </div>
+    <div id="body"></div>
+    <div class="card-foot">
+      <span class="source-line" id="sourceLine"></span>
+      <button class="link-btn" id="sources">查阅本题来源 ↗</button>
+    </div>
+  </div>
+</main>
+
+<footer class="navbar">
+  <div class="navbar-inner">
+    <button id="prev" class="nav-btn" aria-label="上一题"><span class="arrow">‹</span> 上一题</button>
+    <span class="nav-pos" id="position">1 of 4</span>
+    <button id="next" class="nav-btn" aria-label="下一题">下一题 <span class="arrow">›</span></button>
+  </div>
+</footer>
+
+<!-- 设置菜单 -->
+<dialog id="menuDialog">
+  <div class="dlg-head"><h2>设置</h2><button data-close="menuDialog" aria-label="关闭">×</button></div>
+  <div class="dlg-body">
+    <div class="menu-row">
+      <div><div class="row-label">字号</div><div class="row-sub">正文文字大小</div></div>
+      <div class="row-ctrl"><input id="font" type="range" min="15" max="30" value="18"><output id="fontValue">18px</output></div>
+    </div>
+    <div class="menu-row">
+      <div><div class="row-label">滚动速度</div><div class="row-sub">自动滚动快慢</div></div>
+      <div class="row-ctrl"><input id="speed" type="range" min="8" max="60" value="30"><output id="speedValue">30</output></div>
+    </div>
+    <button class="menu-action" id="menuEdit">修改文字 <span class="chev">›</span></button>
+    <button class="menu-action" id="menuSources">查阅来源 <span class="chev">›</span></button>
+    <button class="menu-action" id="menuDownload">下载修改版（导出） <span class="chev">›</span></button>
+    <button class="menu-done" data-close="menuDialog">完成</button>
+  </div>
+</dialog>
+
+<!-- 修改文字 -->
+<dialog id="editDialog">
+  <div class="dlg-head"><h2>修改本题文字</h2><button data-close="editDialog" aria-label="关闭">×</button></div>
+  <div class="dlg-body">
+    <form id="editForm">
+      <div id="editFields"></div>
+      <div class="dlg-foot" style="padding:0;border:none">
+        <small>保存在当前浏览器；下载后可独立使用。</small>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="btn ghost" data-close="editDialog">取消</button>
+          <button type="submit" class="btn">保存</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<!-- 来源 -->
+<dialog id="sourceDialog">
+  <div class="dlg-head"><h2>材料来源</h2><button data-close="sourceDialog" aria-label="关闭">×</button></div>
+  <div class="dlg-body" id="sourceContent"></div>
+</dialog>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script type="application/json" id="payload">{"title":"11月8日财经热点口述提纲","meta":"2026年11月8日备播  |  信息截至11月7日晚  |  行情日期逐条标注","topics":[{"number":"01","title":"美国非农与12月加息预期","parts":[{"label":"最新变化","body":"北京时间11月6日晚，美国公布10月就业报告：新增就业超预期，前两月数据同时上修。[4][5]"},{"label":"数据","body":"新增就业16.5万人，预期6.5万人；8、9月合计上修8.4万人。失业率4.1%，前值4.2%。[4][5]"},{"label":"市场反应","body":"数据后2年期美债收益率一度升7个基点至4.54%；12月加息概率约76%，为见闻7日早间报道快照。[3][5]"},{"label":"市场关注","body":"Lombard Odier强调就业韧性对加息的支持；eToro同时关注强经济对盈利的支撑，以及高利率对AI投资回报的要求。[3]"}],"sourceLine":"来源：美国劳工统计局11月6日 [4]；华尔街见闻11月6日至7日 [3][5]。链接见文末。"},{"number":"02","title":"AI科技股反弹与微软算力租赁调整","parts":[{"label":"最新变化","body":"11月7日见闻转述彭博报道：微软不续签部分甲骨文旧GPU算力租约；微软未置评。[1]"},{"label":"数据","body":"微软与Nscale原有约240兆瓦租约保留，700兆瓦扩容选择权未行使。[1]"},{"label":"市场反应","body":"11月6日收盘，纳指100涨1.35%、AMD涨11.04%；甲骨文盘中一度跌超5%，最终收涨约0.8%。[1][3]"},{"label":"市场关注","body":"高盛交易台关注AI收入能否支撑投入，以及融资条件与建设进度。[2]"}],"sourceLine":"来源：华尔街见闻11月7日 [1][2][3]。链接见文末。"},{"number":"03","title":"美伊谈判进展与新一轮有限打击","parts":[{"label":"最新变化","body":"11月7日，卡塔尔首相称美伊谈判取得重大进展；据Axios报道，万斯近两周参与间接谈判。[7]"},{"label":"关键进展","body":"特朗普确认美方于美国当地时间6日实施有限打击；伊朗媒体初步称，两枚导弹击中格什姆岛。[6]"},{"label":"市场反应","body":"11月6日WTI原油结算价90.83美元/桶、日涨0.34%，当周跌约12.8%。该行情早于7日谈判进展报道。[3]"},{"label":"市场关注","body":"见闻报道将技术级会谈能否落实列为后续观察点；报道时会谈安排尚未确定。[7]"}],"sourceLine":"来源：华尔街见闻11月7日 [3][6][7]，其中[6]汇编新华社与央视新闻。链接见文末。"},{"number":"04","title":"中国央行连续增持黄金与购金规模扩大","parts":[{"label":"最新变化","body":"11月7日公布：10月末中国黄金储备7,830万盎司，连续24个月增加。[8][9]"},{"label":"数据","body":"10月增持83万盎司，约25.82吨；8、9月分别增持65万、74万盎司，近三个月购金量逐月增加。[8]"},{"label":"市场反应","body":"购金数据于周六发布，截至信息截点，尚无公布后的交易日收盘反馈。"},{"label":"市场关注","body":"中新社采访的刘英、庞溟关注储备多元化与长期配置；刘英指出，增持不以短期价格为目标。[9]"}],"sourceLine":"来源：国家外汇管理局2026年月度表 [8]；中新社11月7日 [9]。链接见文末。"}],"sources":{"1":{"label":"[1] 华尔街见闻  11月7日","title":"微软收缩AI算力租赁！据称逐步退出甲骨文云协议，“新云”CoreWeave闪跌","url":"https://wallstreetcn.com/articles/3785404"},"2":{"label":"[2] 华尔街见闻  11月7日","title":"AI泡沫破裂了吗？高盛：当下更像1998年，而非2000年","url":"https://wallstreetcn.com/articles/3785440"},"3":{"label":"[3] 华尔街见闻  11月7日早间综述","title":"强劲非农提振加息预期，美元大涨，美股分化道指收跌，芯片股技术性反弹，AMD涨11%","url":"https://wallstreetcn.com/articles/3785315"},"4":{"label":"[4] 美国劳工统计局  11月6日","title":"The Employment Situation — October 2026","url":"https://www.bls.gov/news.release/archives/empsit_11062026.htm"},"5":{"label":"[5] 华尔街见闻  11月6日","title":"美国10月非农就业激增16.5万，远超预期！失业率意外降至4.1%，12月加息预期升温","url":"https://wallstreetcn.com/articles/3785395"},"6":{"label":"[6] 华尔街见闻  11月7日 汇编新华社与央视新闻","title":"美方对伊朗发动小规模打击！特朗普证实、伊朗称两枚导弹击中格什姆岛","url":"https://wallstreetcn.com/articles/3785419"},"7":{"label":"[7] 华尔街见闻  11月7日","title":"卡塔尔称美伊谈判取得重大进展！万斯深度介入，斡旋升至美国政府最高层级","url":"https://wallstreetcn.com/articles/3785439"},"8":{"label":"[8] 国家外汇管理局  2026年月度数据表","title":"官方储备资产","url":"https://www.safe.gov.cn/safe/2026/0206/27116.html"},"9":{"label":"[9] 中国新闻网  11月7日","title":"中国央行黄金储备“24连增”","url":"https://www.chinanews.com/cj/2026/11-07/10727898.shtml"}},"note":"数据口径：央行单月增持量＝本月末数量－上月末数量；1金衡盎司＝31.1034768克。","revision":1794069630890}</script>
+
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const original=JSON.parse($('payload').textContent);
+const key='finance-cue-nov08-'+(original.revision||'approved-v2');
+let data=structuredClone(original),current=0,running=false,last=0,elapsed=0,toastTimer,buffer=0;
+try{const saved=JSON.parse(localStorage.getItem(key));if(saved&&Array.isArray(saved.topics)&&saved.topics.length&&saved.sources)data=saved;}catch(e){}
+
+function tell(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.hidden=true,3200);}
+function save(){try{localStorage.setItem(key,JSON.stringify(data));return true;}catch(e){return false;}}
+
+function decorate(container,text){
+  const re=/(\[\d+\])|(\d[\d,]*\.?\d*%?)/g;let pos=0;
+  for(const m of text.matchAll(re)){
+    container.append(document.createTextNode(text.slice(pos,m.index)));
+    if(m[1]){
+      const ref=m[1].slice(1,-1);
+      const a=document.createElement('a');
+      a.className='ref';a.textContent=m[1];a.setAttribute('aria-label','查看来源 '+ref);
+      a.addEventListener('click',e=>{e.preventDefault();showSources(ref);});
+      container.append(a);
+    }else{
+      const num=m[2],after=text[m.index+num.length]||'';
+      if('月日年时分秒'.includes(after)){container.append(document.createTextNode(num));}
+      else{const s=document.createElement('strong');s.textContent=num;container.append(s);}
+    }
+    pos=m.index+m[0].length;
+  }
+  container.append(document.createTextNode(text.slice(pos)));
+}
+
+function pause(){running=false;last=0;$('play').textContent='▶';$('play').setAttribute('aria-pressed','false');}
+function updateProgress(){const r=$('stage'),max=r.scrollHeight-r.clientHeight;$('progress').style.width=(max>0?Math.min(100,r.scrollTop/max*100):100)+'%';}
+
+function render(){
+  pause();
+  const t=data.topics[current],total=data.topics.length;
+  $('heading').textContent=t.title;
+  $('count').textContent='话题 '+t.number+' · 共 '+total+' 题';
+  $('position').textContent=(current+1)+' of '+total;
+  $('prev').disabled=current===0;
+  $('next').disabled=current===total-1;
+  $('body').replaceChildren();
+  t.parts.forEach(part=>{
+    const block=document.createElement('section');block.className='part';
+    const label=document.createElement('div');label.className='part-label';label.textContent=part.label;
+    const p=document.createElement('p');p.className='part-body';decorate(p,part.body);
+    block.append(label,p);$('body').append(block);
+  });
+  $('sourceLine').textContent=t.sourceLine;
+  const card=$('card');card.classList.remove('animate');void card.offsetWidth;card.classList.add('animate');
+  $('stage').scrollTop=0;buffer=0;updateProgress();
+}
+
+function change(n){if(n<0||n>=data.topics.length)return;current=n;render();}
+
+function toggle(){
+  if(running){pause();return;}
+  const r=$('stage');
+  if(r.scrollTop>=r.scrollHeight-r.clientHeight-2)r.scrollTop=0;
+  running=true;last=0;buffer=0;
+  $('play').textContent='⏸';$('play').setAttribute('aria-pressed','true');
+}
+
+function tick(now){
+  if(running){
+    if(last){
+      const dt=Math.min((now-last)/1000,.1);
+      elapsed+=dt;buffer+=dt*Number($('speed').value);
+      if(buffer>=1){const step=Math.floor(buffer);$('stage').scrollTop+=step;buffer-=step;}
+      const r=$('stage');
+      if(r.scrollTop>=r.scrollHeight-r.clientHeight-1){
+        pause();
+        tell(current===data.topics.length-1?'全部话题已读完。':'本题已结束，可切换下一题。');
+      }
+    }
+    last=now;
+  }
+  requestAnimationFrame(tick);
+}
+
+function showSources(target){
+  pause();
+  const t=data.topics[current];
+  const refs=[...new Set((t.parts.map(p=>p.body).join(' ')+t.sourceLine).match(/\[\d+\]/g)||[])].map(s=>s.slice(1,-1));
+  const c=$('sourceContent');c.replaceChildren();
+  const intro=document.createElement('p');intro.className='source-intro';intro.textContent=t.sourceLine;c.append(intro);
+  refs.forEach(ref=>{
+    const src=data.sources[ref];if(!src)return;
+    const block=document.createElement('div');block.className='source-item'+(ref===target?' target':'');block.id='source-'+ref;
+    const label=document.createElement('small');label.textContent=src.label;
+    const a=document.createElement('a');a.textContent=src.title;a.href=src.url;a.target='_blank';a.rel='noopener noreferrer';
+    block.append(label,a);c.append(block);
+  });
+  const note=document.createElement('p');note.className='source-note';note.textContent=data.note;c.append(note);
+  $('sourceDialog').showModal();
+  if(target)setTimeout(()=>document.getElementById('source-'+target)?.scrollIntoView({block:'center'}),0);
+}
+
+function openEdit(){
+  pause();
+  const t=data.topics[current];
+  const fields=$('editFields');fields.replaceChildren();
+  function field(label,value,name,isArea){
+    const wrap=document.createElement('label');wrap.className='edit-field';
+    const span=document.createElement('span');span.textContent=label;
+    const ctrl=document.createElement(isArea?'textarea':'input');ctrl.name=name;ctrl.value=value;ctrl.required=true;
+    wrap.append(span,ctrl);fields.append(wrap);
+  }
+  field('话题名称',t.title,'title',false);
+  t.parts.forEach((p,i)=>field(p.label,p.body,'part'+i,true));
+  $('editDialog').showModal();
+}
+
+function download(){
+  pause();
+  const snapshot=structuredClone(data);snapshot.revision=Date.now();
+  const clone=document.documentElement.cloneNode(true);
+  clone.querySelector('#payload').textContent=JSON.stringify(snapshot).replace(/</g,'\\u003c');
+  clone.querySelectorAll('dialog').forEach(d=>d.removeAttribute('open'));
+  clone.querySelector('#toast').hidden=true;
+  clone.querySelector('#toast').textContent='';
+  const st=clone.querySelector('#stage');if(st)st.scrollTop=0;
+  const html='<!doctype html>\n'+clone.outerHTML;
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='11月8日财经提词卡_修改版.html';
+  document.body.append(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),30000);
+  tell('已导出。双击文件即可离线使用。');
+}
+
+$('play').onclick=toggle;
+$('prev').onclick=()=>change(current-1);
+$('next').onclick=()=>change(current+1);
+$('sources').onclick=()=>showSources();
+$('stage').addEventListener('scroll',updateProgress);
+$('font').oninput=()=>{document.documentElement.style.setProperty('--size',$('font').value+'px');$('fontValue').textContent=$('font').value+'px';updateProgress();};
+$('speed').oninput=()=>{$('speedValue').textContent=$('speed').value;};
+$('menuBtn').onclick=()=>$('menuDialog').showModal();
+$('menuEdit').onclick=()=>{$('menuDialog').close();openEdit();};
+$('menuSources').onclick=()=>{$('menuDialog').close();showSources();};
+$('menuDownload').onclick=()=>{$('menuDialog').close();download();};
+$('editForm').onsubmit=e=>{
+  e.preventDefault();
+  const fd=new FormData(e.target),t=data.topics[current];
+  t.title=String(fd.get('title')).trim();
+  t.parts.forEach((p,i)=>p.body=String(fd.get('part'+i)).trim());
+  const ok=save();$('editDialog').close();render();
+  tell(ok?'文字已保存。可导出带走。':'文字已修改，请导出保存。');
+};
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).close());
+document.querySelectorAll('dialog').forEach(d=>d.addEventListener('click',e=>{
+  if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}
+}));
+
+/* 左右滑动切题 */
+let tx=0,ty=0;
+$('stage').addEventListener('touchstart',e=>{if(e.touches.length===1){tx=e.touches[0].clientX;ty=e.touches[0].clientY;}},{passive:true});
+$('stage').addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;
+  if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>48){if(dx<0)change(current+1);else change(current-1);}
+},{passive:true});
+
+/* 键盘 */
+document.addEventListener('keydown',e=>{
+  if(document.querySelector('dialog[open]')||['INPUT','TEXTAREA'].includes(e.target.tagName))return;
+  if(e.code==='Space'){e.preventDefault();toggle();}
+  else if(e.key==='ArrowRight'){e.preventDefault();change(current+1);}
+  else if(e.key==='ArrowLeft'){e.preventDefault();change(current-1);}
+  else if(e.key==='Escape'){pause();}
+});
+
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
+window.addEventListener('resize',updateProgress);
+render();requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
